@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     ScrollView,
     Modal,
-    Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ShoppingCart, RefreshCcw, Plus, Check } from "lucide-react-native";
@@ -15,6 +14,7 @@ import { Item } from "../types";
 import { useShoppingList } from "../hooks/useShoppingList";
 import { ShoppingListItem } from "../components/ShoppingListItem";
 import { EditItemModal } from "../components/EditItemModal";
+import { CustomConfirmModal } from "../components/CustomConfirmModal";
 
 const CATEGORIES = [
     "Mercearia",
@@ -51,6 +51,8 @@ export function HomeScreen() {
     const [checkItemAfterEdit, setCheckItemAfterEdit] = useState<number | null>(
         null,
     );
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [itemToConfirm, setItemToConfirm] = useState<Item | null>(null);
 
     // Função para adicionar rapidamente o item pela barra de input
     const handleAddItem = () => {
@@ -59,33 +61,43 @@ export function HomeScreen() {
     };
 
     // Intercepta o clique no item para perguntar do valor
-    const handleToggleItem = (item: Item) => {
+    const handleToggleItemWithCustomModal = (item: Item) => {
+        // Se o item não está pego E estamos rastreando valor E o item NÃO tem valor definido...
         if (
             !item.checked &&
             isTrackingValue &&
             (!item.price || item.price === 0)
         ) {
-            Alert.alert(
-                "Adicionar valor?",
-                `Gostaria de adicionar um valor para ${item.name}?`,
-                [
-                    {
-                        text: "Não",
-                        style: "cancel",
-                        onPress: () => toggleItem(item.id),
-                    },
-                    {
-                        text: "Sim",
-                        onPress: () => {
-                            setCheckItemAfterEdit(item.id);
-                            setEditingItem(item);
-                        },
-                    },
-                ],
-            );
+            // Em vez do Alert nativo, mostramos o nosso Modal
+            setItemToConfirm(item); // Salva qual item estamos processando
+            setShowConfirmModal(true); // Abre o Modal
         } else {
+            // Caso contrário, apenas marca/desmarca normalmente
             toggleItem(item.id);
         }
+    };
+
+    // Função para quando o usuário clicar em "SIM" no Modal
+    const onConfirmValueModal = () => {
+        if (itemToConfirm) {
+            // Abre o modal de edição (como antes)
+            setCheckItemAfterEdit(itemToConfirm.id);
+            setEditingItem(itemToConfirm);
+        }
+        // Fecha o modal de confirmação
+        setShowConfirmModal(false);
+        setItemToConfirm(null);
+    };
+
+    // Função para quando o usuário clicar em "NÃO" no Modal
+    const onCancelValueModal = () => {
+        if (itemToConfirm) {
+            // Apenas marca o item como pego (como antes)
+            toggleItem(itemToConfirm.id);
+        }
+        // Fecha o modal de confirmação
+        setShowConfirmModal(false);
+        setItemToConfirm(null);
     };
 
     // Função para salvar as alterações vindas do Modal de Edição
@@ -248,7 +260,11 @@ export function HomeScreen() {
                                     <ShoppingListItem
                                         key={item.id}
                                         item={item}
-                                        onToggle={() => handleToggleItem(item)}
+                                        onToggle={() =>
+                                            handleToggleItemWithCustomModal(
+                                                item,
+                                            )
+                                        }
                                         onDelete={deleteItem}
                                         onEdit={setEditingItem}
                                         isLastItem={
@@ -284,6 +300,22 @@ export function HomeScreen() {
                     setCheckItemAfterEdit(null);
                 }}
                 onSave={handleSaveEdit}
+            />
+
+            {/* MODAL DE CONFIRMAÇÃO */}
+            <CustomConfirmModal
+                visible={showConfirmModal}
+                title="Adicionar valor?"
+                message="Gostaria de adicionar um valor para"
+                // Passa o nome do item que guardamos no estado
+                itemTitle={itemToConfirm?.name || ""}
+                onConfirm={onConfirmValueModal}
+                onCancel={onCancelValueModal}
+                // Permite fechar clicando no fundo, trata como "Cancelar (Não)"
+                onRequestClose={() => {
+                    setShowConfirmModal(false);
+                    setItemToConfirm(null);
+                }}
             />
 
             {/* MODAL DE REINICIAR (Pode ser isolado posteriormente também) */}
