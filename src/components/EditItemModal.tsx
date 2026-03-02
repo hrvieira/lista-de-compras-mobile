@@ -24,6 +24,7 @@ interface EditItemModalProps {
         name: string,
         category: string,
         quantity: number,
+        price?: number,
     ) => void;
 }
 
@@ -34,24 +35,29 @@ export function EditItemModal({
     onClose,
     onSave,
 }: EditItemModalProps) {
-    // Estados locais para controlar os dados do formulário temporariamente
     const [name, setName] = useState("");
     const [category, setCategory] = useState("");
     const [quantity, setQuantity] = useState(1);
+    const [price, setPrice] = useState(""); // Estado para o valor (tratado como string no input)
 
-    // Sincroniza o estado local sempre que um novo item for passado para edição
+    // Sincroniza os dados do item quando o modal abre
     useEffect(() => {
         if (item) {
             setName(item.name);
             setCategory(item.category);
             setQuantity(item.quantity || 1);
+            setPrice(item.price ? item.price.toString() : "");
         }
     }, [item]);
 
-    // Função para validar e enviar os dados salvos
     const handleSave = () => {
         if (!name.trim() || !item) return;
-        onSave(item.id, name, category, quantity);
+
+        // Converte vírgula para ponto e analisa o número
+        const numericPrice = parseFloat(price.replace(",", "."));
+        const finalPrice = isNaN(numericPrice) ? undefined : numericPrice;
+
+        onSave(item.id, name, category, quantity, finalPrice);
     };
 
     if (!item) return null;
@@ -70,7 +76,6 @@ export function EditItemModal({
                         style={styles.keyboardContainer}
                     >
                         <View style={styles.modalContent}>
-                            {/* Cabeçalho do Modal */}
                             <View style={styles.modalHeader}>
                                 <View style={styles.modalTitleContainer}>
                                     <Pencil color="#fff" size={20} />
@@ -92,9 +97,7 @@ export function EditItemModal({
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Corpo do Formulário */}
                             <View style={styles.modalBody}>
-                                {/* Campo de Nome */}
                                 <Text style={styles.label}>
                                     NOME / DESCRIÇÃO
                                 </Text>
@@ -102,44 +105,63 @@ export function EditItemModal({
                                     style={styles.modalInput}
                                     value={name}
                                     onChangeText={setName}
-                                    autoFocus
                                 />
 
-                                {/* Controle de Quantidade */}
-                                <Text style={styles.label}>QUANTIDADE</Text>
-                                <View style={styles.qtyContainer}>
-                                    <TouchableOpacity
-                                        style={styles.qtyBtn}
-                                        onPress={() =>
-                                            setQuantity((prev) =>
-                                                Math.max(1, prev - 1),
-                                            )
-                                        }
-                                    >
-                                        <ChevronDown
-                                            color="#4b5563"
-                                            size={24}
+                                <View style={styles.row}>
+                                    <View style={styles.halfWidth}>
+                                        <Text style={styles.label}>
+                                            VALOR (R$)
+                                        </Text>
+                                        <TextInput
+                                            style={styles.modalInput}
+                                            value={price}
+                                            onChangeText={setPrice}
+                                            keyboardType="numeric"
+                                            placeholder="0,00"
                                         />
-                                    </TouchableOpacity>
+                                    </View>
 
-                                    <Text style={styles.qtyText}>
-                                        {quantity}
-                                    </Text>
-
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.qtyBtn,
-                                            styles.qtyBtnPlus,
-                                        ]}
-                                        onPress={() =>
-                                            setQuantity((prev) => prev + 1)
-                                        }
-                                    >
-                                        <ChevronUp color="#059669" size={24} />
-                                    </TouchableOpacity>
+                                    <View style={styles.halfWidth}>
+                                        <Text style={styles.label}>
+                                            QUANTIDADE
+                                        </Text>
+                                        <View style={styles.qtyContainer}>
+                                            <TouchableOpacity
+                                                style={styles.qtyBtn}
+                                                onPress={() =>
+                                                    setQuantity((prev) =>
+                                                        Math.max(1, prev - 1),
+                                                    )
+                                                }
+                                            >
+                                                <ChevronDown
+                                                    color="#4b5563"
+                                                    size={20}
+                                                />
+                                            </TouchableOpacity>
+                                            <Text style={styles.qtyText}>
+                                                {quantity}
+                                            </Text>
+                                            <TouchableOpacity
+                                                style={[
+                                                    styles.qtyBtn,
+                                                    styles.qtyBtnPlus,
+                                                ]}
+                                                onPress={() =>
+                                                    setQuantity(
+                                                        (prev) => prev + 1,
+                                                    )
+                                                }
+                                            >
+                                                <ChevronUp
+                                                    color="#059669"
+                                                    size={20}
+                                                />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
                                 </View>
 
-                                {/* Seleção de Categoria */}
                                 <Text style={styles.label}>CATEGORIA</Text>
                                 <View style={styles.categoryWrapper}>
                                     {categories.map((cat) => (
@@ -165,7 +187,6 @@ export function EditItemModal({
                                     ))}
                                 </View>
 
-                                {/* Botão de Salvar */}
                                 <TouchableOpacity
                                     style={styles.saveBtn}
                                     onPress={handleSave}
@@ -184,7 +205,6 @@ export function EditItemModal({
     );
 }
 
-// Estilos isolados para o modal
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
@@ -193,10 +213,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 16,
     },
-    keyboardContainer: {
-        width: "100%",
-        alignItems: "center",
-    },
+    keyboardContainer: { width: "100%", alignItems: "center" },
     modalContent: {
         width: "100%",
         maxWidth: 400,
@@ -211,29 +228,21 @@ const styles = StyleSheet.create({
         alignItems: "center",
         padding: 16,
     },
-    modalTitleContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
+    modalTitleContainer: { flexDirection: "row", alignItems: "center" },
     modalTitle: {
         color: "#fff",
         fontSize: 18,
         fontWeight: "bold",
         marginLeft: 8,
     },
-    closeBtn: {
-        padding: 2,
-        borderRadius: 12,
-    },
-    modalBody: {
-        padding: 20,
-    },
+    closeBtn: { padding: 2, borderRadius: 12 },
+    modalBody: { padding: 20 },
     label: {
         fontSize: 12,
         fontWeight: "bold",
         color: "#6b7280",
         marginBottom: 6,
-        marginTop: 16,
+        marginTop: 12,
     },
     modalInput: {
         backgroundColor: "#f9fafb",
@@ -244,50 +253,35 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "#374151",
     },
-    qtyContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
+    row: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
+    halfWidth: { flex: 1 },
+    qtyContainer: { flexDirection: "row", alignItems: "center", height: 52 },
     qtyBtn: {
-        width: 48,
-        height: 48,
+        width: 40,
+        height: "100%",
         backgroundColor: "#f3f4f6",
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
     },
-    qtyBtnPlus: {
-        backgroundColor: "#d1fae5",
-    },
+    qtyBtnPlus: { backgroundColor: "#d1fae5" },
     qtyText: {
         flex: 1,
         textAlign: "center",
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: "bold",
         color: "#1f2937",
     },
-    categoryWrapper: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 8,
-    },
+    categoryWrapper: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
     catBadge: {
         backgroundColor: "#f3f4f6",
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
     },
-    catBadgeActive: {
-        backgroundColor: "#10b981",
-    },
-    catBadgeText: {
-        fontSize: 14,
-        fontWeight: "500",
-        color: "#4b5563",
-    },
-    catBadgeTextActive: {
-        color: "#fff",
-    },
+    catBadgeActive: { backgroundColor: "#10b981" },
+    catBadgeText: { fontSize: 14, fontWeight: "500", color: "#4b5563" },
+    catBadgeTextActive: { color: "#fff" },
     saveBtn: {
         backgroundColor: "#10b981",
         flexDirection: "row",

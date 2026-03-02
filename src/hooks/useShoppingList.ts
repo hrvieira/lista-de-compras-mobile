@@ -3,20 +3,25 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Item } from "../types";
 
 const STORAGE_KEY = "@shoppingListApp_v1";
+const TRACKING_KEY = "@shoppingListApp_tracking";
 
 export function useShoppingList(initialList: Item[]) {
     const [items, setItems] = useState<Item[]>([]);
+    const [isTrackingValue, setIsTrackingValue] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
 
+    // Carrega os dados e o estado do modo de valores
     useEffect(() => {
         const loadData = async () => {
             try {
-                const saved = await AsyncStorage.getItem(STORAGE_KEY);
-                if (saved !== null) {
-                    setItems(JSON.parse(saved));
-                } else {
-                    setItems(initialList);
-                }
+                const savedItems = await AsyncStorage.getItem(STORAGE_KEY);
+                const savedTracking = await AsyncStorage.getItem(TRACKING_KEY);
+
+                if (savedItems !== null) setItems(JSON.parse(savedItems));
+                else setItems(initialList);
+
+                if (savedTracking !== null)
+                    setIsTrackingValue(JSON.parse(savedTracking));
             } catch (e) {
                 console.error("Erro ao carregar dados", e);
             } finally {
@@ -26,14 +31,18 @@ export function useShoppingList(initialList: Item[]) {
         loadData();
     }, []);
 
-    // Salva os dados localmente sempre que a lista for atualizada
+    // Salva os dados localmente
     useEffect(() => {
         if (isLoaded) {
             AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items)).catch(
-                (e) => console.error("Erro ao salvar dados", e),
+                (e) => console.error(e),
             );
+            AsyncStorage.setItem(
+                TRACKING_KEY,
+                JSON.stringify(isTrackingValue),
+            ).catch((e) => console.error(e));
         }
-    }, [items, isLoaded]);
+    }, [items, isTrackingValue, isLoaded]);
 
     const toggleItem = (id: number) => {
         setItems(
@@ -50,9 +59,6 @@ export function useShoppingList(initialList: Item[]) {
     const addItem = (newItemText: string) => {
         if (!newItemText.trim()) return;
 
-        // 1. Divide o texto usando a vírgula como separador
-        // 2. Limpa os espaços em branco no início e fim de cada palavra (trim)
-        // 3. Filtra para remover itens vazios (caso o usuário digite "Arroz, , Feijão")
         const newNames = newItemText
             .split(",")
             .map((name) => name.trim())
@@ -60,23 +66,22 @@ export function useShoppingList(initialList: Item[]) {
 
         if (newNames.length === 0) return;
 
-        // Cria um array de novos objetos Item
         const newItems: Item[] = newNames.map((name, index) => ({
-            // Usamos o index somado ao Date.now() para garantir que, se processados no
-            // mesmo milissegundo, cada item ainda tenha um ID único
             id: Date.now() + index,
             name: name,
-            category: "Extras", // Por padrão, vão para a categoria Extras
+            category: "Extras",
             checked: false,
             quantity: 1,
         }));
 
-        // Adiciona os novos itens no topo da lista existente
         setItems([...newItems, ...items]);
     };
 
-    const resetList = () =>
+    // Atualiza a função de reinício para definir o modo
+    const resetList = (trackValue: boolean) => {
         setItems(items.map((item) => ({ ...item, checked: false })));
+        setIsTrackingValue(trackValue);
+    };
 
     return {
         items,
@@ -86,5 +91,6 @@ export function useShoppingList(initialList: Item[]) {
         addItem,
         resetList,
         setItems,
+        isTrackingValue,
     };
 }

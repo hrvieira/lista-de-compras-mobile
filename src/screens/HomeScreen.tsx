@@ -7,11 +7,10 @@ import {
     TouchableOpacity,
     ScrollView,
     Modal,
+    Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ShoppingCart, RefreshCcw, Plus, Check } from "lucide-react-native";
-
-// Importação das nossas tipagens, hooks e componentes isolados
 import { Item } from "../types";
 import { useShoppingList } from "../hooks/useShoppingList";
 import { ShoppingListItem } from "../components/ShoppingListItem";
@@ -37,7 +36,8 @@ export function HomeScreen() {
         deleteItem,
         addItem,
         resetList,
-        setItems, // Trazemos o setItems para atualizar um item editado
+        setItems,
+        isTrackingValue,
     } = useShoppingList([]);
 
     // 2. Estados visuais (exclusivos deste ecrã)
@@ -48,10 +48,44 @@ export function HomeScreen() {
     const [showResetModal, setShowResetModal] = useState(false);
     const [editingItem, setEditingItem] = useState<Item | null>(null);
 
+    const [checkItemAfterEdit, setCheckItemAfterEdit] = useState<number | null>(
+        null,
+    );
+
     // Função para adicionar rapidamente o item pela barra de input
     const handleAddItem = () => {
         addItem(newItemText);
         setNewItemText("");
+    };
+
+    // Intercepta o clique no item para perguntar do valor
+    const handleToggleItem = (item: Item) => {
+        if (
+            !item.checked &&
+            isTrackingValue &&
+            (!item.price || item.price === 0)
+        ) {
+            Alert.alert(
+                "Adicionar valor?",
+                `Gostaria de adicionar um valor para ${item.name}?`,
+                [
+                    {
+                        text: "Não",
+                        style: "cancel",
+                        onPress: () => toggleItem(item.id),
+                    },
+                    {
+                        text: "Sim",
+                        onPress: () => {
+                            setCheckItemAfterEdit(item.id);
+                            setEditingItem(item);
+                        },
+                    },
+                ],
+            );
+        } else {
+            toggleItem(item.id);
+        }
     };
 
     // Função para salvar as alterações vindas do Modal de Edição
@@ -60,19 +94,43 @@ export function HomeScreen() {
         name: string,
         category: string,
         quantity: number,
+        price?: number,
     ) => {
         setItems(
-            items.map((item) =>
-                item.id === id ? { ...item, name, category, quantity } : item,
-            ),
+            items.map((item) => {
+                if (item.id === id) {
+                    // Se este item foi enviado para edição via pop-up de marcação, nós o marcamos como concluído agora
+                    const shouldBeChecked =
+                        checkItemAfterEdit === id ? true : item.checked;
+                    return {
+                        ...item,
+                        name,
+                        category,
+                        quantity,
+                        price,
+                        checked: shouldBeChecked,
+                    };
+                }
+                return item;
+            }),
         );
         setEditingItem(null);
+        setCheckItemAfterEdit(null);
+    };
+
+    const executeReset = (track: boolean) => {
+        resetList(track);
+        setShowResetModal(false);
     };
 
     // 3. Cálculos de estatísticas
     const totalItems = items.length;
     const checkedItems = items.filter((i) => i.checked).length;
     const progress = totalItems === 0 ? 0 : (checkedItems / totalItems) * 100;
+
+    const totalPrice = items
+        .filter((i) => i.checked && i.price)
+        .reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0);
 
     // 4. Filtragem e Agrupamento
     const itemsToShow = items.filter((i) => {
@@ -100,7 +158,7 @@ export function HomeScreen() {
     if (!isLoaded) return null;
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
             {/* CABEÇALHO */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
@@ -113,7 +171,7 @@ export function HomeScreen() {
                         onPress={() => setShowResetModal(true)}
                     >
                         <RefreshCcw color="#4b5563" size={14} />
-                        <Text style={styles.resetBtnText}>Reiniciar</Text>
+                        <Text style={styles.resetBtnText}>Nova Compra</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -190,7 +248,7 @@ export function HomeScreen() {
                                     <ShoppingListItem
                                         key={item.id}
                                         item={item}
-                                        onToggle={toggleItem}
+                                        onToggle={() => handleToggleItem(item)}
                                         onDelete={deleteItem}
                                         onEdit={setEditingItem}
                                         isLastItem={
@@ -204,12 +262,27 @@ export function HomeScreen() {
                 )}
             </ScrollView>
 
+            {/* RODAPÉ DE VALOR TOTAL */}
+            {isTrackingValue && (
+                <View style={styles.footer}>
+                    <SafeAreaView edges={["bottom"]} style={styles.footerInner}>
+                        <Text style={styles.footerLabel}>Valor Total:</Text>
+                        <Text style={styles.footerValue}>
+                            R$ {totalPrice.toFixed(2).replace(".", ",")}
+                        </Text>
+                    </SafeAreaView>
+                </View>
+            )}
+
             {/* MODAL DE EDIÇÃO ISOLADO */}
             <EditItemModal
                 visible={!!editingItem}
                 item={editingItem}
                 categories={CATEGORIES}
-                onClose={() => setEditingItem(null)}
+                onClose={() => {
+                    setEditingItem(null);
+                    setCheckItemAfterEdit(null);
+                }}
                 onSave={handleSaveEdit}
             />
 
@@ -219,24 +292,32 @@ export function HomeScreen() {
                     <View style={styles.modalResetContent}>
                         <Text style={styles.resetTitle}>Nova Compra?</Text>
                         <Text style={styles.resetDesc}>
-                            Isto irá desmarcar todos os itens da lista, mas os
-                            mesmos ficarão guardados.
+                            Gostaria de adicionar valor aos itens nesta compra?
                         </Text>
 
                         <TouchableOpacity
-                            style={styles.confirmBtn}
-                            onPress={() => {
-                                resetList();
-                                setShowResetModal(false);
-                            }}
+                            style={styles.btnPrimary}
+                            onPress={() => executeReset(true)}
                         >
-                            <Text style={styles.confirmBtnText}>Confirmar</Text>
+                            <Text style={styles.btnPrimaryText}>
+                                Sim, adicionar valores
+                            </Text>
                         </TouchableOpacity>
+
                         <TouchableOpacity
-                            style={styles.cancelBtn}
+                            style={styles.btnSecondary}
+                            onPress={() => executeReset(false)}
+                        >
+                            <Text style={styles.btnSecondaryText}>
+                                Não, apenas reiniciar lista
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.btnCancel}
                             onPress={() => setShowResetModal(false)}
                         >
-                            <Text style={styles.cancelBtnText}>Cancelar</Text>
+                            <Text style={styles.btnCancelText}>Cancelar</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -352,6 +433,29 @@ const styles = StyleSheet.create({
         borderColor: "#f3f4f6",
         overflow: "hidden",
     },
+
+    // Estilos do Footer de Valores
+    footer: {
+        backgroundColor: "#10b981",
+        borderTopWidth: 1,
+        borderColor: "#059669",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 10,
+    },
+    footerInner: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+    },
+    footerLabel: { color: "#fff", fontSize: 16, fontWeight: "600" },
+    footerValue: { color: "#fff", fontSize: 24, fontWeight: "bold" },
+
+    // Estilos do Modal de Reset
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.6)",
@@ -379,21 +483,31 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginBottom: 24,
     },
-    confirmBtn: {
+    btnPrimary: {
         backgroundColor: "#10b981",
         width: "100%",
         padding: 14,
         borderRadius: 12,
         alignItems: "center",
-        marginBottom: 12,
+        marginBottom: 10,
     },
-    confirmBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-    cancelBtn: {
-        backgroundColor: "#f3f4f6",
+    btnPrimaryText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+    btnSecondary: {
+        backgroundColor: "#ecfdf5",
+        borderWidth: 1,
+        borderColor: "#10b981",
+        width: "100%",
+        padding: 14,
+        borderRadius: 12,
+        alignItems: "center",
+        marginBottom: 10,
+    },
+    btnSecondaryText: { color: "#059669", fontSize: 16, fontWeight: "bold" },
+    btnCancel: {
         width: "100%",
         padding: 14,
         borderRadius: 12,
         alignItems: "center",
     },
-    cancelBtnText: { color: "#4b5563", fontSize: 16, fontWeight: "bold" },
+    btnCancelText: { color: "#9ca3af", fontSize: 14, fontWeight: "bold" },
 });
