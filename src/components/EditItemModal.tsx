@@ -38,22 +38,51 @@ export function EditItemModal({
     const [name, setName] = useState("");
     const [category, setCategory] = useState("");
     const [quantity, setQuantity] = useState(1);
-    const [price, setPrice] = useState(""); // Estado para o valor (tratado como string no input)
+    const [price, setPrice] = useState("");
 
-    // Sincroniza os dados do item quando o modal abre
+    // 1. CORREÇÃO DA VÍRGULA AO ABRIR O MODAL:
     useEffect(() => {
         if (item) {
             setName(item.name);
             setCategory(item.category);
             setQuantity(item.quantity || 1);
-            setPrice(item.price ? item.price.toString() : "");
+
+            if (item.price) {
+                const priceString = item.price.toString().replace(".", ",");
+                setPrice(priceString);
+            } else {
+                setPrice("");
+            }
         }
     }, [item]);
+
+    // 2. NOVA FUNÇÃO: MÁSCARA DE PREÇO
+    const handlePriceChange = (text: string) => {
+        // a. Troca pontos por vírgulas (caso o usuário aperte ponto no teclado)
+        let formatted = text.replace(".", ",");
+
+        // b. Remove qualquer caractere que não seja número ou vírgula
+        formatted = formatted.replace(/[^0-9,]/g, "");
+
+        // c. Garante que só existe UMA vírgula no texto
+        const parts = formatted.split(",");
+        if (parts.length > 2) {
+            formatted = parts[0] + "," + parts.slice(1).join("");
+        }
+
+        // d. Limita a no máximo 2 casas decimais após a vírgula
+        const finalParts = formatted.split(",");
+        if (finalParts.length === 2 && finalParts[1].length > 2) {
+            formatted = finalParts[0] + "," + finalParts[1].substring(0, 2);
+        }
+
+        setPrice(formatted);
+    };
 
     const handleSave = () => {
         if (!name.trim() || !item) return;
 
-        // Converte vírgula para ponto e analisa o número
+        // Converte a vírgula de volta para ponto só na hora de salvar no sistema
         const numericPrice = parseFloat(price.replace(",", "."));
         const finalPrice = isNaN(numericPrice) ? undefined : numericPrice;
 
@@ -115,7 +144,8 @@ export function EditItemModal({
                                         <TextInput
                                             style={styles.modalInput}
                                             value={price}
-                                            onChangeText={setPrice}
+                                            // 3. APLICAMOS A NOSSA MÁSCARA AQUI
+                                            onChangeText={handlePriceChange}
                                             keyboardType="numeric"
                                             placeholder="0,00"
                                         />
@@ -205,6 +235,7 @@ export function EditItemModal({
     );
 }
 
+// Estilos mantidos iguais
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,

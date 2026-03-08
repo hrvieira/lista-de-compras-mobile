@@ -18,11 +18,13 @@ import { CustomConfirmModal } from "../components/CustomConfirmModal";
 
 const CATEGORIES = [
     "Mercearia",
+    "Carnes",
+    "Congelados",
     "Laticínios",
-    "Carnes & Congelados",
     "Hortifruti",
     "Higiene",
     "Limpeza",
+    "Bebidas",
     "Extras",
     "Outros",
 ];
@@ -53,6 +55,8 @@ export function HomeScreen() {
     );
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [itemToConfirm, setItemToConfirm] = useState<Item | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
 
     // Função para adicionar rapidamente o item pela barra de input
     const handleAddItem = () => {
@@ -74,6 +78,21 @@ export function HomeScreen() {
         } else {
             // Caso contrário, apenas marca/desmarca normalmente
             toggleItem(item.id);
+        }
+    };
+
+    // Intercepta o clique de apagar
+    const handleRequestDelete = (id: number) => {
+        // Procura o item na lista para ver se ele está marcado
+        const item = items.find((i) => i.id === id);
+
+        if (item && item.checked) {
+            // Se já foi pego, abre o modal de confirmação
+            setItemToDelete(item);
+            setShowDeleteModal(true);
+        } else {
+            // Se ainda não foi pego, apaga direto sem perguntar
+            deleteItem(id);
         }
     };
 
@@ -145,11 +164,13 @@ export function HomeScreen() {
         .reduce((sum, i) => sum + (i.price || 0) * i.quantity, 0);
 
     // 4. Filtragem e Agrupamento
-    const itemsToShow = items.filter((i) => {
-        if (activeTab === "pendentes") return !i.checked;
-        if (activeTab === "pegos") return i.checked;
-        return true;
-    });
+    const itemsToShow = items
+        .filter((i) => {
+            if (activeTab === "pendentes") return !i.checked;
+            if (activeTab === "pegos") return i.checked;
+            return true;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
 
     const groupedItems = CATEGORIES.reduce(
         (acc, cat) => {
@@ -265,7 +286,7 @@ export function HomeScreen() {
                                                 item,
                                             )
                                         }
-                                        onDelete={deleteItem}
+                                        onDelete={handleRequestDelete}
                                         onEdit={setEditingItem}
                                         isLastItem={
                                             index === catItems.length - 1
@@ -284,7 +305,11 @@ export function HomeScreen() {
                     <SafeAreaView edges={["bottom"]} style={styles.footerInner}>
                         <Text style={styles.footerLabel}>Valor Total:</Text>
                         <Text style={styles.footerValue}>
-                            R$ {totalPrice.toFixed(2).replace(".", ",")}
+                            R${" "}
+                            {totalPrice
+                                .toFixed(2)
+                                .replace(".", ",")
+                                .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                         </Text>
                     </SafeAreaView>
                 </View>
@@ -315,6 +340,28 @@ export function HomeScreen() {
                 onRequestClose={() => {
                     setShowConfirmModal(false);
                     setItemToConfirm(null);
+                }}
+            />
+
+            {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+            <CustomConfirmModal
+                visible={showDeleteModal}
+                title="Apagar item?"
+                message="Tem certeza que deseja apagar da lista o item"
+                itemTitle={itemToDelete?.name || ""}
+                isDestructive={true}
+                onConfirm={() => {
+                    if (itemToDelete) deleteItem(itemToDelete.id);
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
+                }}
+                onCancel={() => {
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
+                }}
+                onRequestClose={() => {
+                    setShowDeleteModal(false);
+                    setItemToDelete(null);
                 }}
             />
 

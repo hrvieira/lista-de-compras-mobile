@@ -17,6 +17,7 @@ interface CustomConfirmModalProps {
     onCancel: () => void;
     // Permite fechar clicando no fundo escuro
     onRequestClose: () => void;
+    isDestructive?: boolean;
 }
 
 export function CustomConfirmModal({
@@ -27,6 +28,7 @@ export function CustomConfirmModal({
     onConfirm,
     onCancel,
     onRequestClose,
+    isDestructive = false,
 }: CustomConfirmModalProps) {
     return (
         <Modal
@@ -47,7 +49,12 @@ export function CustomConfirmModal({
                             {/* Mensagem e Nome do Item (destacado em verde) */}
                             <View style={styles.messageContainer}>
                                 <Text style={styles.message}>{message}</Text>
-                                <Text style={styles.itemTitle}>
+                                <Text
+                                    style={[
+                                        styles.itemTitle,
+                                        isDestructive && styles.textDestructive,
+                                    ]}
+                                >
                                     {itemTitle}?
                                 </Text>
                             </View>
@@ -70,6 +77,7 @@ export function CustomConfirmModal({
                                     style={[
                                         styles.button,
                                         styles.confirmButton,
+                                        isDestructive && styles.btnDestructive,
                                     ]}
                                 >
                                     <Text style={styles.confirmButtonText}>
@@ -128,6 +136,9 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginTop: 4,
     },
+    textDestructive: {
+        color: "#ef4444", // Vermelho para ações destrutivas
+    },
     buttonsContainer: {
         flexDirection: "row",
         gap: 12,
@@ -156,6 +167,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 4,
+    },
+    btnDestructive: {
+        backgroundColor: "#ef4444",
+        shadowColor: "#ef4444",
     },
     confirmButtonText: {
         color: "#fff",

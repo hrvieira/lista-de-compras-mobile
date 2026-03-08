@@ -62,8 +62,8 @@ export function useShoppingList(initialList: Item[]) {
         const newNames = newItemText
             .split(",")
             .map((name) => name.trim())
-            .filter((name) => name.length > 0);
-
+            .filter((name) => name.length > 0)
+            .map(name => name.charAt(0).toUpperCase() + name.slice(1));
         if (newNames.length === 0) return;
 
         const newItems: Item[] = newNames.map((name, index) => ({
