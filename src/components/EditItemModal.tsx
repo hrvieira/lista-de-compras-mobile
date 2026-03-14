@@ -10,8 +10,11 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
+    Pressable, // ← ADICIONADO
 } from "react-native";
-import { Pencil, X, ChevronDown, ChevronUp, Save } from "lucide-react-native";
+
+// Importando ícones centralizados (já configurados no seu src/icons/index.ts)
+import { Pencil, X, ChevronDown, ChevronUp, Save } from "../icons";
 import { Item } from "../types";
 
 interface EditItemModalProps {
@@ -40,7 +43,7 @@ export function EditItemModal({
     const [quantity, setQuantity] = useState(1);
     const [price, setPrice] = useState("");
 
-    // 1. CORREÇÃO DA VÍRGULA AO ABRIR O MODAL:
+    // 1. CORREÇÃO DA VÍRGULA AO ABRIR O MODAL
     useEffect(() => {
         if (item) {
             setName(item.name);
@@ -56,21 +59,16 @@ export function EditItemModal({
         }
     }, [item]);
 
-    // 2. NOVA FUNÇÃO: MÁSCARA DE PREÇO
+    // 2. MÁSCARA DE PREÇO
     const handlePriceChange = (text: string) => {
-        // a. Troca pontos por vírgulas (caso o usuário aperte ponto no teclado)
         let formatted = text.replace(".", ",");
-
-        // b. Remove qualquer caractere que não seja número ou vírgula
         formatted = formatted.replace(/[^0-9,]/g, "");
 
-        // c. Garante que só existe UMA vírgula no texto
         const parts = formatted.split(",");
         if (parts.length > 2) {
             formatted = parts[0] + "," + parts.slice(1).join("");
         }
 
-        // d. Limita a no máximo 2 casas decimais após a vírgula
         const finalParts = formatted.split(",");
         if (finalParts.length === 2 && finalParts[1].length > 2) {
             formatted = finalParts[0] + "," + finalParts[1].substring(0, 2);
@@ -82,7 +80,6 @@ export function EditItemModal({
     const handleSave = () => {
         if (!name.trim() || !item) return;
 
-        // Converte a vírgula de volta para ponto só na hora de salvar no sistema
         const numericPrice = parseFloat(price.replace(",", "."));
         const finalPrice = isNaN(numericPrice) ? undefined : numericPrice;
 
@@ -98,144 +95,143 @@ export function EditItemModal({
             animationType="fade"
             onRequestClose={onClose}
         >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View style={styles.modalOverlay}>
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : undefined}
-                        style={styles.keyboardContainer}
-                    >
-                        <View style={styles.modalContent}>
-                            <View style={styles.modalHeader}>
-                                <View style={styles.modalTitleContainer}>
-                                    <Pencil color="#fff" size={20} />
-                                    <Text style={styles.modalTitle}>
-                                        Editar Item
-                                    </Text>
+            <View style={styles.modalOverlay}>
+                {/* === CAMADA DE FUNDO (corrigido para web + mobile) === */}
+                <Pressable
+                    style={StyleSheet.absoluteFillObject}
+                    onPress={
+                        Platform.OS === "web"
+                            ? onClose // No site: tocar fora fecha o modal (UX web padrão)
+                            : Keyboard.dismiss // No APK: só fecha teclado (comportamento antigo)
+                    }
+                />
+
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : undefined}
+                    style={styles.keyboardContainer}
+                >
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <View style={styles.modalTitleContainer}>
+                                <Pencil color="#fff" size={20} />
+                                <Text style={styles.modalTitle}>
+                                    Editar Item
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                style={styles.closeBtn}
+                                hitSlop={{
+                                    top: 10,
+                                    bottom: 10,
+                                    left: 10,
+                                    right: 10,
+                                }}
+                            >
+                                <X color="#fff" size={24} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.modalBody}>
+                            <Text style={styles.label}>NOME / DESCRIÇÃO</Text>
+                            <TextInput
+                                style={styles.modalInput}
+                                value={name}
+                                onChangeText={setName}
+                                autoFocus
+                            />
+
+                            <View style={styles.row}>
+                                <View style={styles.halfWidth}>
+                                    <Text style={styles.label}>VALOR (R$)</Text>
+                                    <TextInput
+                                        style={styles.modalInput}
+                                        value={price}
+                                        onChangeText={handlePriceChange}
+                                        keyboardType="numeric"
+                                        placeholder="0,00"
+                                    />
                                 </View>
-                                <TouchableOpacity
-                                    onPress={onClose}
-                                    style={styles.closeBtn}
-                                    hitSlop={{
-                                        top: 10,
-                                        bottom: 10,
-                                        left: 10,
-                                        right: 10,
-                                    }}
-                                >
-                                    <X color="#fff" size={24} />
-                                </TouchableOpacity>
+
+                                <View style={styles.halfWidth}>
+                                    <Text style={styles.label}>QUANTIDADE</Text>
+                                    <View style={styles.qtyContainer}>
+                                        <TouchableOpacity
+                                            style={styles.qtyBtn}
+                                            onPress={() =>
+                                                setQuantity((prev) =>
+                                                    Math.max(1, prev - 1),
+                                                )
+                                            }
+                                        >
+                                            <ChevronDown
+                                                color="#4b5563"
+                                                size={20}
+                                            />
+                                        </TouchableOpacity>
+                                        <Text style={styles.qtyText}>
+                                            {quantity}
+                                        </Text>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.qtyBtn,
+                                                styles.qtyBtnPlus,
+                                            ]}
+                                            onPress={() =>
+                                                setQuantity((prev) => prev + 1)
+                                            }
+                                        >
+                                            <ChevronUp
+                                                color="#059669"
+                                                size={20}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
                             </View>
 
-                            <View style={styles.modalBody}>
-                                <Text style={styles.label}>
-                                    NOME / DESCRIÇÃO
-                                </Text>
-                                <TextInput
-                                    style={styles.modalInput}
-                                    value={name}
-                                    onChangeText={setName}
-                                />
-
-                                <View style={styles.row}>
-                                    <View style={styles.halfWidth}>
-                                        <Text style={styles.label}>
-                                            VALOR (R$)
-                                        </Text>
-                                        <TextInput
-                                            style={styles.modalInput}
-                                            value={price}
-                                            // 3. APLICAMOS A NOSSA MÁSCARA AQUI
-                                            onChangeText={handlePriceChange}
-                                            keyboardType="numeric"
-                                            placeholder="0,00"
-                                        />
-                                    </View>
-
-                                    <View style={styles.halfWidth}>
-                                        <Text style={styles.label}>
-                                            QUANTIDADE
-                                        </Text>
-                                        <View style={styles.qtyContainer}>
-                                            <TouchableOpacity
-                                                style={styles.qtyBtn}
-                                                onPress={() =>
-                                                    setQuantity((prev) =>
-                                                        Math.max(1, prev - 1),
-                                                    )
-                                                }
-                                            >
-                                                <ChevronDown
-                                                    color="#4b5563"
-                                                    size={20}
-                                                />
-                                            </TouchableOpacity>
-                                            <Text style={styles.qtyText}>
-                                                {quantity}
-                                            </Text>
-                                            <TouchableOpacity
-                                                style={[
-                                                    styles.qtyBtn,
-                                                    styles.qtyBtnPlus,
-                                                ]}
-                                                onPress={() =>
-                                                    setQuantity(
-                                                        (prev) => prev + 1,
-                                                    )
-                                                }
-                                            >
-                                                <ChevronUp
-                                                    color="#059669"
-                                                    size={20}
-                                                />
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                </View>
-
-                                <Text style={styles.label}>CATEGORIA</Text>
-                                <View style={styles.categoryWrapper}>
-                                    {categories.map((cat) => (
-                                        <TouchableOpacity
-                                            key={cat}
-                                            onPress={() => setCategory(cat)}
+                            <Text style={styles.label}>CATEGORIA</Text>
+                            <View style={styles.categoryWrapper}>
+                                {categories.map((cat) => (
+                                    <TouchableOpacity
+                                        key={cat}
+                                        onPress={() => setCategory(cat)}
+                                        style={[
+                                            styles.catBadge,
+                                            category === cat &&
+                                                styles.catBadgeActive,
+                                        ]}
+                                    >
+                                        <Text
                                             style={[
-                                                styles.catBadge,
+                                                styles.catBadgeText,
                                                 category === cat &&
-                                                    styles.catBadgeActive,
+                                                    styles.catBadgeTextActive,
                                             ]}
                                         >
-                                            <Text
-                                                style={[
-                                                    styles.catBadgeText,
-                                                    category === cat &&
-                                                        styles.catBadgeTextActive,
-                                                ]}
-                                            >
-                                                {cat}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-
-                                <TouchableOpacity
-                                    style={styles.saveBtn}
-                                    onPress={handleSave}
-                                >
-                                    <Save color="#fff" size={20} />
-                                    <Text style={styles.saveBtnText}>
-                                        Salvar Alterações
-                                    </Text>
-                                </TouchableOpacity>
+                                            {cat}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
                             </View>
+
+                            <TouchableOpacity
+                                style={styles.saveBtn}
+                                onPress={handleSave}
+                            >
+                                <Save color="#fff" size={20} />
+                                <Text style={styles.saveBtnText}>
+                                    Salvar Alterações
+                                </Text>
+                            </TouchableOpacity>
                         </View>
-                    </KeyboardAvoidingView>
-                </View>
-            </TouchableWithoutFeedback>
+                    </View>
+                </KeyboardAvoidingView>
+            </View>
         </Modal>
     );
 }
 
-// Estilos mantidos iguais
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,

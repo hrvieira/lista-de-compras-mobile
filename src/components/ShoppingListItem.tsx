@@ -1,6 +1,14 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Check, Pencil, Trash2 } from "lucide-react-native";
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    Platform,
+} from "react-native";
+
+// Importando ícones centralizados
+import { Check, Pencil, Trash2 } from "../icons";
 import { Item } from "../types";
 
 interface ShoppingListItemProps {
@@ -8,7 +16,7 @@ interface ShoppingListItemProps {
     onToggle: (id: number) => void;
     onEdit: (item: Item) => void;
     onDelete: (id: number) => void;
-    isLastItem?: boolean; // Usado para remover a borda inferior do último item da lista
+    isLastItem?: boolean;
 }
 
 export function ShoppingListItem({
@@ -69,7 +77,6 @@ export function ShoppingListItem({
                 <TouchableOpacity
                     onPress={() => onEdit(item)}
                     style={styles.actionBtn}
-                    // Previne que o clique no botão dispare o clique da linha inteira
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                     <Pencil color="#9ca3af" size={18} />
@@ -87,7 +94,6 @@ export function ShoppingListItem({
     );
 }
 
-// Estilos isolados apenas para o item da lista
 const styles = StyleSheet.create({
     itemRow: {
         flexDirection: "row",

@@ -256,7 +256,7 @@ export function HomeScreen() {
                     <Plus color="#9ca3af" size={20} style={styles.inputIcon} />
                     <TextInput
                         style={styles.input}
-                        placeholder="Adicionar item rápido..."
+                        placeholder="Adicionar item... (ex.: Arroz 5kg, feijão 1kg, etc)"
                         value={newItemText}
                         onChangeText={setNewItemText}
                         onSubmitEditing={handleAddItem}
