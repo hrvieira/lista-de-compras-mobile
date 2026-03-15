@@ -15,6 +15,7 @@ import { useShoppingList } from "../hooks/useShoppingList";
 import { ShoppingListItem } from "../components/ShoppingListItem";
 import { EditItemModal } from "../components/EditItemModal";
 import { CustomConfirmModal } from "../components/CustomConfirmModal";
+import { Donations } from "../components/Donations";
 
 const CATEGORIES = [
     "Mercearia",
@@ -57,6 +58,7 @@ export function HomeScreen() {
     const [itemToConfirm, setItemToConfirm] = useState<Item | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
+    
 
     // Função para adicionar rapidamente o item pela barra de input
     const handleAddItem = () => {
@@ -271,6 +273,10 @@ export function HomeScreen() {
                         <Text style={styles.emptyText}>
                             A sua lista está vazia por aqui.
                         </Text>
+                        <Donations
+                            pixKey="00020126580014br.gov.bcb.pix01369fbeb4fb-894f-47f8-bba7-9d9b81fa07fc5204000053039865802BR5913Luiz Henrique6009Sao Paulo62230519daqr219521690821110630488A5"
+                            pixQrCodeUrl="https://i.ibb.co/PZVkGhGT/qrcode.png"
+                        />
                     </View>
                 ) : (
                     Object.entries(groupedItems).map(([category, catItems]) => (
@@ -294,6 +300,10 @@ export function HomeScreen() {
                                     />
                                 ))}
                             </View>
+                            <Donations
+                                pixKey="00020126580014br.gov.bcb.pix01369fbeb4fb-894f-47f8-bba7-9d9b81fa07fc5204000053039865802BR5913Luiz Henrique6009Sao Paulo62230519daqr219521690821110630488A5"
+                                pixQrCodeUrl="https://i.ibb.co/PZVkGhGT/qrcode.png"
+                            />
                         </View>
                     ))
                 )}
@@ -401,6 +411,22 @@ export function HomeScreen() {
                     </View>
                 </View>
             </Modal>
+
+            {/* MODAL DE CONFIRMAÇÃO */}
+            <CustomConfirmModal
+                visible={showConfirmModal}
+                title="Adicionar valor?"
+                message="Gostaria de adicionar um valor para"
+                // Passa o nome do item que guardamos no estado
+                itemTitle={itemToConfirm?.name || ""}
+                onConfirm={onConfirmValueModal}
+                onCancel={onCancelValueModal}
+                // Permite fechar clicando no fundo, trata como "Cancelar (Não)"
+                onRequestClose={() => {
+                    setShowConfirmModal(false);
+                    setItemToConfirm(null);
+                }}
+            />
         </SafeAreaView>
     );
 }

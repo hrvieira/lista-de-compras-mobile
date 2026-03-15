@@ -16,3 +16,7 @@ export const ChevronDown =
 export const ChevronUp =
     Platform.OS === "web" ? WebIcons.ChevronUp : NativeIcons.ChevronUp;
 export const Save = Platform.OS === "web" ? WebIcons.Save : NativeIcons.Save;
+export const Heart = Platform.OS === "web" ? WebIcons.Heart : NativeIcons.Heart;
+export const Copy = Platform.OS === "web" ? WebIcons.Copy : NativeIcons.Copy;
+export const CreditCard =
+    Platform.OS === "web" ? WebIcons.CreditCard : NativeIcons.CreditCard;

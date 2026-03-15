@@ -75,19 +75,19 @@ O app permite adicionar, editar e marcar itens como comprados, com uma interface
 
 1. **Tela Principal (HomeScreen)**: Lista os itens com opções de adicionar e editar.
 
-<img src="assets/screenshot/homescreen.jpg" alt="Home Screen" width="200" height="400">
+<img src="https://i.ibb.co/BKr1hfLW/homescreen.jpg" alt="Home Screen" width="200" height="400">
 
 2. **Tela Principal (HomeScreen)**: Lista os itens com opção de valores e soma dos mesmos.
 
-<img src="assets/screenshot/homecomvalores.jpg" alt="Home Screen com valores" width="200" height="400">
+<img src="https://i.ibb.co/h1t9WJr1/homecomvalores.jpg" alt="Home Screen com valores" width="200" height="400">
 
 3. **Tela de itens faltantes**: Lista apenas os itens que ainda não foram marcados.
 
-<img src="assets/screenshot/faltamitens.jpg" alt="Itens faltando" width="200" height="400">
+<img src="https://i.ibb.co/JjnCxLHk/faltamitens.jpg" alt="Itens faltando" width="200" height="400">
 
 4. **Tela de itens selecionados**: Lista apenas os itens que foram selecinados(pegos).
 
-<img src="assets/screenshot/itenspegos.jpg" alt="Itens no carrinho" width="200" height="400">
+<img src="https://i.ibb.co/xtpWp5dq/itenspegos.jpg" alt="Itens no carrinho" width="200" height="400">
 
 ## Estrutura do Projeto
 
