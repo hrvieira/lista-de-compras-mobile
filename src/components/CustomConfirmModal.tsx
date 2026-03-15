@@ -15,9 +15,10 @@ interface CustomConfirmModalProps {
     itemTitle: string;
     onConfirm: () => void;
     onCancel: () => void;
-    // Permite fechar clicando no fundo escuro
     onRequestClose: () => void;
     isDestructive?: boolean;
+    showCancelButton?: boolean;
+    confirmButtonText?: string;
 }
 
 export function CustomConfirmModal({
@@ -29,6 +30,8 @@ export function CustomConfirmModal({
     onCancel,
     onRequestClose,
     isDestructive = false,
+    showCancelButton = true,
+    confirmButtonText = isDestructive ? "Excluir" : "Confirmar",
 }: CustomConfirmModalProps) {
     return (
         <Modal
@@ -55,33 +58,38 @@ export function CustomConfirmModal({
                                         isDestructive && styles.textDestructive,
                                     ]}
                                 >
-                                    {itemTitle}?
+                                    {itemTitle}
                                 </Text>
                             </View>
 
                             {/* Botões de Ação */}
                             <View style={styles.buttonsContainer}>
                                 {/* Botão NÃO (estilo secundário) */}
-                                <TouchableOpacity
-                                    onPress={onCancel}
-                                    style={[styles.button, styles.cancelButton]}
-                                >
-                                    <Text style={styles.cancelButtonText}>
-                                        NÃO
-                                    </Text>
-                                </TouchableOpacity>
-
+                                {showCancelButton && (
+                                    <TouchableOpacity
+                                        onPress={onCancel}
+                                        style={[
+                                            styles.button,
+                                            styles.cancelButton,
+                                        ]}
+                                    >
+                                        <Text style={styles.cancelButtonText}>
+                                            NÃO
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                                
                                 {/* Botão SIM (estilo primário verde esmeralda) */}
                                 <TouchableOpacity
-                                    onPress={onConfirm}
                                     style={[
                                         styles.button,
                                         styles.confirmButton,
                                         isDestructive && styles.btnDestructive,
                                     ]}
+                                    onPress={onConfirm}
                                 >
                                     <Text style={styles.confirmButtonText}>
-                                        SIM
+                                        {confirmButtonText}
                                     </Text>
                                 </TouchableOpacity>
                             </View>

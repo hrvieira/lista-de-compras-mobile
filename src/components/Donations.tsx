@@ -1,37 +1,33 @@
-import React from "react";
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    StyleSheet,
-    Platform,
-} from "react-native";
-import { Heart, Copy, CreditCard } from "../icons"; // seus ícones já configurados
-import { AlignCenter } from "lucide-react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Heart, Copy, CreditCard } from "../icons";
+import { CustomConfirmModal } from "./CustomConfirmModal";
 
 interface DonationsProps {
-    pixKey: string; // ← sua chave PIX
-    pixQrCodeUrl: string; // ← link da imagem do QR Code
+    pixKey: string;
+    pixQrCodeUrl: string;
 }
 
 export function Donations({ pixKey, pixQrCodeUrl }: DonationsProps) {
+    const [showCopiedModal, setShowCopiedModal] = useState(false);
+
     const copyPixKey = () => {
         navigator.clipboard.writeText(pixKey);
-        alert("✅ Chave PIX copiada!");
+        setShowCopiedModal(true);
     };
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Heart color="#ef4444" size={28} />
-                <Text style={styles.title}>Me ajude a manter o site no ar</Text>
-                <Heart color="#ef4444" size={28} />
+                <Text style={styles.title}>
+                    Me ajude a manter o site no ar ❤️
+                </Text>
             </View>
 
             <Text style={styles.text}>
                 O app é 100% grátis e feito com muito carinho. Qualquer ajuda
-                (R$ 1, R$ 5, R$ 10...) mantém o servidor ligado e me motiva a
-                adicionar novas funções!
+                (R$ 1, R$ 5, R$ 10...) mantém o servidor ligado!
             </Text>
 
             {/* PIX */}
@@ -52,7 +48,7 @@ export function Donations({ pixKey, pixQrCodeUrl }: DonationsProps) {
                 </TouchableOpacity>
             </View>
 
-            {/* Cartão de crédito/débito */}
+            {/* Cartão */}
             <TouchableOpacity
                 style={styles.cardBtn}
                 onPress={() =>
@@ -68,9 +64,21 @@ export function Donations({ pixKey, pixQrCodeUrl }: DonationsProps) {
                 </Text>
             </TouchableOpacity>
 
-            <Text style={styles.thanks}>
-                Obrigado de coração! Você é incrível ❤️
-            </Text>
+            <Text style={styles.thanks}>Obrigado de coração! ❤️</Text>
+
+            {/* === MODAL DE SUCESSO (igual ao de apagar) === */}
+            <CustomConfirmModal
+                visible={showCopiedModal}
+                title="Chave PIX foi copiada!"
+                message="A chave foi copiada para a área de transferência."
+                itemTitle=""
+                isDestructive={false}
+                showCancelButton={false}
+                confirmButtonText="OK"
+                onConfirm={() => setShowCopiedModal(false)}
+                onCancel={() => setShowCopiedModal(false)}
+                onRequestClose={() => setShowCopiedModal(false)}
+            />
         </View>
     );
 }
