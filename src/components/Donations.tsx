@@ -20,9 +20,8 @@ export function Donations({ pixKey, pixQrCodeUrl }: DonationsProps) {
         <View style={styles.container}>
             <View style={styles.header}>
                 <Heart color="#ef4444" size={28} />
-                <Text style={styles.title}>
-                    Me ajude a manter o site no ar ❤️
-                </Text>
+                <Text style={styles.title}>Me ajude a manter o site no ar</Text>
+                <Heart color="#ef4444" size={28} />
             </View>
 
             <Text style={styles.text}>
