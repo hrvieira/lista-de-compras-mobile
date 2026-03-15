@@ -84,7 +84,7 @@ export function Donations({ pixKey, pixQrCodeUrl }: DonationsProps) {
 
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 16,
+        paddingTop: 20,
         padding: 24,
         backgroundColor: "#f8fafc",
         alignItems: "center",
