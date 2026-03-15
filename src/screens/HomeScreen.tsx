@@ -296,13 +296,13 @@ export function HomeScreen() {
                                     />
                                 ))}
                             </View>
-                            <Donations
-                                pixKey="00020126580014br.gov.bcb.pix01369fbeb4fb-894f-47f8-bba7-9d9b81fa07fc5204000053039865802BR5913Luiz Henrique6009Sao Paulo62230519daqr219521690821110630488A5"
-                                pixQrCodeUrl="https://i.ibb.co/PZVkGhGT/qrcode.png"
-                            />
                         </View>
                     ))
                 )}
+            <Donations
+                pixKey="00020126580014br.gov.bcb.pix01369fbeb4fb-894f-47f8-bba7-9d9b81fa07fc5204000053039865802BR5913Luiz Henrique6009Sao Paulo62230519daqr219521690821110630488A5"
+                pixQrCodeUrl="https://i.ibb.co/PZVkGhGT/qrcode.png"
+            />
             </ScrollView>
 
             {/* RODAPÉ DE VALOR TOTAL */}
